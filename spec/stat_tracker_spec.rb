@@ -85,6 +85,53 @@ RSpec.describe StatTracker do
     end
   end
 
+  describe '#highest_ and lowest_scoring_visitor' do
+    it 'can find highest scoring visitor' do
+      expect(stat_tracker.highest_scoring_visitor).to eq("FC Dallas")
+    end
+
+    it 'can find lowest scoring visitor' do
+      expect(stat_tracker.lowest_scoring_visitor).to eq("LA Galaxy").or(eq("FC Cincinnati"))
+    end
+  end
+
+  describe '#highest_ and lowest_scoring_home_team' do
+    it 'can find highest scoring home team' do
+      expect(stat_tracker.highest_scoring_home_team).to eq("North Carolina Courage")
+    end
+
+    it 'can find the lowest scoring home team' do
+      expect(stat_tracker.lowest_scoring_home_team).to eq("FC Dallas").or(eq("Minnesota United FC")).or(eq("Montreal Impact"))
+    end
+  end
+
+  describe '#most_tackles and #fewest_tackles' do
+    it 'can find most_tackles' do
+
+    expect(stat_tracker.most_tackles("20132014")).to eq("North Carolina Courage")
+    end
+
+    it 'can find fewest_tackles' do
+      expect(stat_tracker.fewest_tackles("20132014")).to eq("FC Cincinnati")
+    end
+  end
+
+  describe '#average_win_percentage' do
+    it 'can find average_win_percentage for a team' do
+      expect(stat_tracker.average_win_percentage("6")).to eq(0.33)
+    end
+  end
+
+  describe 'best and worst offense' do
+    it 'can find best_offense' do
+      expect(stat_tracker.best_offense).to eq("North Carolina Courage")
+    end
+
+    it 'can find the worst_offense' do
+      expect(stat_tracker.worst_offense).to eq("FC Cincinnati")
+    end
+  end
+
   describe '#winningest_coach' do
     it 'can return the coach with the best win percentage for a season' do
       expect(stat_tracker.winningest_coach("20152016")).to eq("Michel Therrien")
