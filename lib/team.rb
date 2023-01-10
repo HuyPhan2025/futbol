@@ -13,6 +13,5 @@ class Team
     @abbreviation = info[:abbreviation]
     @stadium = info[:stadium]
     @link = info[:link]
-    # require 'pry'; binding.pry
   end
 end
