@@ -5,17 +5,19 @@ RSpec.describe StatTracker do
   let(:team_path) {'./spec/fixtures/teams.csv'}
   let(:game_teams_path) {'./spec/fixtures/game_teams.csv'}
   let(:locations) do
-      {
-      games: game_path,
-      teams: team_path,
-      game_teams: game_teams_path
-      }
-    end
+    {
+    games: game_path,
+    teams: team_path,
+    game_teams: game_teams_path
+    }
+  end
 
   let(:stat_tracker) { StatTracker.from_csv(locations) }
-    
-  it 'exists' do
+  
+  describe "#initialize" do
+    it 'exists' do
       expect(StatTracker.from_csv(locations)).to be_an_instance_of(StatTracker)
+    end
   end
 
   describe '#highest_total_score' do
@@ -37,17 +39,23 @@ RSpec.describe StatTracker do
     end
   end
 
-    it "#percentage_home_wins" do
-    expect(stat_tracker.percentage_home_wins).to eq 0.40
+  describe '#percentage_home_wins' do
+    it "can return percentage of home wins" do
+      expect(stat_tracker.percentage_home_wins).to eq 0.40
     end
+  end
 
-    it "#percentage_visitor_wins" do
-        expect(stat_tracker.percentage_visitor_wins).to eq 0.50
+  describe '#percentage_visitor_wins' do
+    it "can return percentage of home wins" do
+      expect(stat_tracker.percentage_visitor_wins).to eq 0.50
     end
-
-    it "#percentage_ties" do
-        expect(stat_tracker.percentage_ties).to eq 0.10
+  end
+  
+  describe '#percentage_ties' do
+    it "can return percentage of ties" do
+      expect(stat_tracker.percentage_ties).to eq 0.10
     end
+  end
 
   describe '#average_goals_per_game or season' do
     it 'can find average goals per game' do
@@ -56,12 +64,12 @@ RSpec.describe StatTracker do
 
     it 'can find average goals by season' do
       expected_hash = 
-      {
-        "20132014" => 4.0,
-        "20122013" => 3.33,
-        "20162017" => 3.0,
-        "20152016" => 4.0
-      }
+        {
+          "20132014" => 4.0,
+          "20122013" => 3.33,
+          "20162017" => 3.0,
+          "20152016" => 4.0
+        }
 
       expect(stat_tracker.average_goals_by_season).to eq(expected_hash)
     end
@@ -81,6 +89,7 @@ RSpec.describe StatTracker do
         "20162017"=>1,
         "20152016"=>3,
       }
+
       expect(stat_tracker.count_of_games_by_season).to eq(expected)
     end
   end
@@ -107,8 +116,7 @@ RSpec.describe StatTracker do
 
   describe '#most_tackles and #fewest_tackles' do
     it 'can find most_tackles' do
-
-    expect(stat_tracker.most_tackles("20132014")).to eq("North Carolina Courage")
+      expect(stat_tracker.most_tackles("20132014")).to eq("North Carolina Courage")
     end
 
     it 'can find fewest_tackles' do
@@ -170,32 +178,183 @@ RSpec.describe StatTracker do
     end
   end
 
-
-  it "#most_accurate_team" do
-    expect(stat_tracker.most_accurate_team("20162017")).to eq ("Real Salt Lake")
-    expect(stat_tracker.most_accurate_team("20122013")).to eq ("FC Dallas")
+  describe '#most_accurate_team' do
+    it "can return the name of the most accurate team" do
+      expect(stat_tracker.most_accurate_team("20162017")).to eq ("Real Salt Lake")
+      expect(stat_tracker.most_accurate_team("20122013")).to eq ("FC Dallas")
+    end
   end
 
-  it "#least_accurate_team" do
-    expect(stat_tracker.least_accurate_team("20162017")).to eq ("Montreal Impact")
-    expect(stat_tracker.least_accurate_team("20122013")).to eq ("Seattle Sounders FC")
+  describe '#least_accurate_team' do
+    it "can return the name of the least accurate team" do
+      expect(stat_tracker.least_accurate_team("20162017")).to eq ("Montreal Impact")
+      expect(stat_tracker.least_accurate_team("20122013")).to eq ("Seattle Sounders FC")
+    end
   end
 
-  it "#most_goals_scored" do
-    expect(stat_tracker.most_goals_scored("6")).to eq 4
+  describe '#most_goals_scored' do
+    it "can return the most goals scored by a team in a game" do
+      expect(stat_tracker.most_goals_scored("6")).to eq 4
+    end
   end
 
-  it "#fewest_goals_scored" do
-    expect(stat_tracker.fewest_goals_scored("6")).to eq 1
+  describe '#fewest_goals_scored' do
+    it "can return the fewest goals scored by a team in a game" do
+      expect(stat_tracker.fewest_goals_scored("6")).to eq 1
+    end
   end
 
-  it "#favorite_opponent" do
-    expect(stat_tracker.favorite_opponent("6")).to eq ("Sporting Kansas City")
+  describe '#favorite_opponent' do
+    it "can return the name of the favorite opponent" do
+      expect(stat_tracker.favorite_opponent("6")).to eq ("Sporting Kansas City")
+    end
   end
 
-  it "#rival" do
-    expect(stat_tracker.rival("6")).to eq("New York Red Bulls")
+  describe '#rival' do
+    it "can return the name of the rival opponent" do
+      expect(stat_tracker.rival("6")).to eq("New York Red Bulls")
+    end
   end
 
-  
+  describe 'Helper Methods' do
+    describe '#games_total_scores_array' do
+      it 'can return an array of total scores' do
+        expect(stat_tracker.games_total_scores_array).to eq([2, 3, 2, 3, 5, 3, 5, 4, 3, 7])
+      end
+    end
+
+    describe '#total_game_goals' do
+      it 'can return total number of goals in a game' do
+        game = stat_tracker.games[0]
+
+        expect(stat_tracker.total_game_goals(game)).to eq(2)
+      end
+    end
+
+    describe '#percent_team_goals' do
+      it 'can return hash of percent goals by team' do
+        expected = {
+          "26"=>1.0, "18"=>1.0, 
+          "17"=>1.0, "16"=>2.0, 
+          "2"=>1.5, "5"=>1.5, 
+          "24"=>2.0, "23"=>1.0, 
+          "6"=>2.0, "8"=>2.33, 
+          "13"=>2.5, "10"=>4.0
+        }
+
+        expect(stat_tracker.percent_team_goals).to eq(expected)
+      end
+    end
+
+    describe '#away_teams_average_scoring_hash' do
+      it 'can return hash of away average score per team' do
+        expected = {
+          "26"=>1.0, "17"=>1.0,
+          "2"=>1.5, "24"=>2.0, 
+          "6"=>4.0, "8"=>2.5, 
+          "13"=>3.0
+        }
+
+        expect(stat_tracker.away_teams_average_scoring_hash).to eq(expected)
+      end
+    end
+
+    describe '#away_games_per_team' do
+      it 'can return number of away games per team' do
+        expected = {
+          "26"=>1, "17"=>2, 
+          "2"=>2, "24"=>1, 
+          "6"=>1, "8"=>2, "13"=>1
+        }
+
+        expect(stat_tracker.away_games_per_team).to eq(expected)
+      end
+    end
+
+    describe '#home_teams_average_scoring_hash' do
+      it 'can return hash of home average score per team' do
+        expected = {
+          "18"=>1.0, "16"=>2.0, 
+          "5"=>1.5, "23"=>1.0, 
+          "8"=>2.0, "13"=>2.0, 
+          "6"=>1.0, "10"=>4.0
+        }
+
+        expect(stat_tracker.home_teams_average_scoring_hash).to eq(expected)
+      end
+    end
+
+    describe '#home_games_per_team' do
+      it 'can return number of home games per team' do
+        expected = {
+          "18"=>1, "16"=>1, 
+          "5"=>2, "23"=>1, 
+          "8"=>1, "13"=>1, 
+          "6"=>2, "10"=>1
+        }
+
+        expect(stat_tracker.home_games_per_team).to eq(expected)
+      end
+    end
+
+    describe '#team_season_win_percentage' do
+      it 'can return a hash of season win percentages for a team' do
+        expected = { "20122013"=>1.0, "20152016"=>0.0, "20132014"=>0.0 }
+
+        expect(stat_tracker.team_season_win_percentage("6")).to eq(expected)
+      end
+    end
+
+    describe '#season_coaches' do
+      it 'returns a hash of wins and losses per game with coach' do
+        expected = {
+          :win=>[["2016021135", "Randy Carlyle"]], 
+          :loss=>[["2016021135", "Willie Desjardins"]]
+        }
+        
+        expect(stat_tracker.season_coaches("20162017")).to eq(expected)
+      end
+    end
+
+    describe '#tackles_by_season' do
+      it 'can return number of tackles by season' do
+        expected = {
+          "17"=>25, "16"=>22, 
+          "2"=>27, "5"=>70, 
+          "6"=>19
+        }
+
+        expect(stat_tracker.tackles_by_season("20122013")).to eq(expected)
+      end
+    end
+
+    describe '#team_accuracy' do
+      it 'can return a hash of each teams accuracy for given season' do
+        expected = {
+          "17"=>0.1667, "16"=>0.1818, 
+          "2"=>0.0, "5"=>0.2308, 
+          "6"=>0.5714
+        }
+
+        expect(stat_tracker.team_accuracy("20122013"))
+      end
+    end
+    
+    describe '#team_game_win_percentages' do
+      it 'returns a hash of opponents and number of losses and wins' do
+        expected = {
+          "5"=>{:wins=>0.0, :losses=>1.0}, 
+          "8"=>{:wins=>1.0, :losses=>0.0}
+        }
+
+        expect(stat_tracker.team_game_win_percentages("6")).to eq(expected)
+      end
+    end
+
+    describe '#team_name_by_team_id' do
+      it 'can return team name for a given team id' do
+        expect(stat_tracker.team_name_by_team_id("6")).to eq("FC Dallas")
+      end
+    end
+  end
 end
