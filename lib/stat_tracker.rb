@@ -1,4 +1,4 @@
-require 'csv'
+require_relative 'stat_creator'
 require_relative 'gameable'
 require_relative 'leagueable'
 require_relative 'seasonable'
@@ -9,46 +9,9 @@ class StatTracker
   attr_reader :games, :teams, :game_teams
 
   def initialize(locations)
-    @games = create_games(locations[:games])
-    @teams = create_teams(locations[:teams])
-    @game_teams = create_game_teams(locations[:game_teams])
-  end
-
-  def create_games(game_path)
-    games = []
-    CSV.foreach(game_path, headers: true, header_converters: :symbol ) do |info|
-      game = info.to_h
-      game[:away_goals] = game[:away_goals].to_i
-      game[:home_goals] = game[:home_goals].to_i
-      games << game
-    end
-    games
-  end
-
-  def create_teams(team_path)
-    teams = []
-    CSV.foreach(team_path, headers: true, header_converters: :symbol ) do |info|
-      teams << info.to_h
-    end
-    teams
-  end
-
-  def create_game_teams(game_teams_path)
-    game_teams = []
-    CSV.foreach(game_teams_path, headers: true, header_converters: :symbol ) do |info|
-      game_team = info.to_h
-      game_team[:goals] = game_team[:goals].to_i
-      game_team[:shots] = game_team[:shots].to_i
-      game_team[:tackles] = game_team[:tackles].to_i
-      game_team[:pim] = game_team[:pim].to_i
-      game_team[:powerplayopportunities] = game_team[:powerplayopportunities].to_i
-      game_team[:powerplaygoals] = game_team[:powerplaygoals].to_i
-      game_team[:faceoffwinpercentage] = game_team[:faceoffwinpercentage].to_f
-      game_team[:giveaways] = game_team[:giveaways].to_i
-      game_team[:takeaways] = game_team[:takeaways].to_i
-      game_teams << game_team
-    end
-    game_teams
+    @games = StatCreator.create_games(locations[:games])
+    @teams = StatCreator.create_teams(locations[:teams])
+    @game_teams = StatCreator.create_game_teams(locations[:game_teams])
   end
 
   def self.from_csv(locations)
@@ -64,15 +27,15 @@ class StatTracker
   end
 
   def percentage_home_wins
-    percentage_game_wins(:home_goals, :away_goals)
+    (@games.find_all { |game| game.home_goals > game.away_goals}.count.to_f / @games.count).round(2)
   end
 
   def percentage_visitor_wins
-    percentage_game_wins(:away_goals, :home_goals)
+    (@games.find_all { |game| game.home_goals < game.away_goals}.count.to_f / @games.count).round(2)
   end
 
   def percentage_ties
-    (@games.find_all { |game| game[:away_goals] == game[:home_goals]}.count.to_f / @games.count).round(2)
+    (@games.find_all { |game| game.away_goals == game.home_goals}.count.to_f / @games.count).round(2)
   end
 
   def average_goals_per_game
@@ -80,14 +43,9 @@ class StatTracker
   end
   
   def average_goals_by_season
-    hash = Hash.new{0}
-    
-    games_by_season.each do |season, games|
-      games.each { |game| hash[season] += total_game_goals(game) }      
-      hash[season] = (hash[season]/games.size.to_f).round(2)
+    games_by_season.transform_values do |games|
+      (games.sum { |game| total_game_goals(game) } / games.size.to_f).round(2)
     end
-
-    hash
   end        
      
   def count_of_teams
@@ -95,9 +53,7 @@ class StatTracker
   end
 
   def count_of_games_by_season
-    count_of_games_by_season = {}
-    games_by_season.each { |season, games| count_of_games_by_season[season] = games.size }
-    count_of_games_by_season
+    games_by_season.transform_values(&:size)
   end
     
   def highest_scoring_visitor
@@ -132,7 +88,7 @@ class StatTracker
 
   def average_win_percentage(id)
     number_of_winning_games = game_teams_group_by_team_id[id].count do |game|
-        game[:result] == "WIN"
+        game.result == "WIN"
     end
     (number_of_winning_games/game_teams_group_by_team_id[id].count.to_f).round(2)
   end
@@ -158,18 +114,17 @@ class StatTracker
   end
   
   def most_goals_scored(team_id)
-    game_teams_group_by_team_id[team_id].max_by {|team_game| team_game[:goals]}[:goals]
+    game_teams_group_by_team_id[team_id].max_by {|team_game| team_game.goals}.goals
   end
 
   def fewest_goals_scored(team_id)
-    game_teams_group_by_team_id[team_id].min_by {|team_game| team_game[:goals]}[:goals]
+    game_teams_group_by_team_id[team_id].min_by {|team_game| team_game.goals}.goals
   end
   
   def favorite_opponent(team_id)
     favorite_team_id = team_game_win_percentages(team_id).max_by do |team_id, results| 
       results[:losses]
     end.first
-
     team_name_by_team_id(favorite_team_id)
   end
 
@@ -177,7 +132,6 @@ class StatTracker
     rival_team_id = team_game_win_percentages(team_id).max_by do |team_id, results| 
       results[:wins]
     end.first
-
     team_name_by_team_id(rival_team_id)
   end  
  
@@ -198,14 +152,14 @@ class StatTracker
   end
 
   def team_info(team_id)
-    team = @teams.find { |team| team[:team_id] == team_id }
+    team = @teams.find { |team| team.team_id == team_id }
 
     { 
-      "team_id" => team[:team_id],
-      "franchise_id" => team[:franchiseid],
-      "team_name" => team[:teamname],
-      "abbreviation" => team[:abbreviation],
-      "link" => team[:link]
+      "team_id" => team.team_id,
+      "franchise_id" => team.franchise_id,
+      "team_name" => team.team_name,
+      "abbreviation" => team.abbreviation,
+      "link" => team.link
     }
   end
 end
