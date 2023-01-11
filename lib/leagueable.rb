@@ -4,10 +4,11 @@ module Leagueable
   include Helpable
 
   def percent_team_goals
-    percent_team_goals = game_teams_group_by_team_id.transform_values do |games_by_team| 
+    game_teams_group_by_team_id.transform_values do |games_by_team| 
       total_goals = games_by_team.sum do |game|
         game.goals
       end
+
       (total_goals.to_f/games_by_team.count).round(2)
     end
   end
@@ -27,6 +28,7 @@ module Leagueable
         end
       end
     end
+
     away_teams_average_scoring_hash
   end
 
@@ -49,6 +51,7 @@ module Leagueable
         end
       end
     end
+
     home_teams_average_scoring_hash
   end
 
@@ -57,6 +60,7 @@ module Leagueable
     @games.map do |game|
       number_of_games << game.home_team_id
     end
+    
     number_of_games.tally
   end
 
@@ -74,5 +78,39 @@ module Leagueable
     team_season_game_teams.transform_values do |team_season_game_teams|
       team_season_game_teams.count { |team_season_game_team| team_season_game_team.result == "WIN" }.to_f / team_season_game_teams.count
     end
+  end
+
+  def count_of_teams
+    @teams.length
+  end
+
+  def best_offense    
+    best_offense_id = percent_team_goals.max_by { |percent_team_goal| percent_team_goal[1]}.first
+    team_name_by_team_id(best_offense_id)
+  end
+
+  def worst_offense    
+    worst_offense_id = percent_team_goals.min_by { |percent_team_goal| percent_team_goal[1]}.first
+    team_name_by_team_id(worst_offense_id)
+  end
+
+  def highest_scoring_home_team
+    highest_id = home_teams_average_scoring_hash.max_by { |home_team| home_team[1] }.first
+    team_name_by_team_id(highest_id)
+  end
+
+  def lowest_scoring_home_team
+    lowest_id = home_teams_average_scoring_hash.min_by { |home_team| home_team[1] }.first
+    team_name_by_team_id(lowest_id)
+  end
+  
+  def highest_scoring_visitor
+    highest_id = away_teams_average_scoring_hash.max_by { |away_team| away_team[1] }.first
+    team_name_by_team_id(highest_id)
+  end  
+    
+  def lowest_scoring_visitor
+    lowest_id = away_teams_average_scoring_hash.min_by { |away_team| away_team[1] }.first
+    team_name_by_team_id(lowest_id)
   end
 end

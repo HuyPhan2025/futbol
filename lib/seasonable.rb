@@ -45,9 +45,37 @@ module Seasonable
       team_season_games = season_games.select {|season_game| season_game.team_id == season_team_id}
       team_season_goals = team_season_games.sum {|team_season_game| team_season_game.goals}
       team_season_shots = team_season_games.sum {|team_season_game| team_season_game.shots}
-      team_accuracy[season_team_id] = team_season_goals / team_season_shots.to_f 
+      team_accuracy[season_team_id] = (team_season_goals / team_season_shots.to_f).round(4)
     end 
 
     team_accuracy
+  end
+
+  def winningest_coach(season)
+    season_coaches(season)[:win].group_by(&:last).map { |coach, win_game_ids| [win_game_ids.size, coach] }.max.last
+  end
+
+  def worst_coach(season)
+    season_coaches(season)[:loss].group_by(&:last).map { |coach, win_game_ids| [win_game_ids.size, coach] }.min.last
+  end
+
+  def most_accurate_team(season)  
+    best_team = team_accuracy(season).max_by {|team| team[1]}[0]
+    team_name_by_team_id(best_team)
+  end
+
+  def least_accurate_team(season)
+    worst_team = team_accuracy(season).min_by {|team| team[1]}[0]
+    team_name_by_team_id(worst_team)
+  end
+
+  def most_tackles(season)
+    team_with_most_tackles = tackles_by_season(season).max_by { |team_tackles| team_tackles[1] }.first
+    team_name_by_team_id(team_with_most_tackles)
+  end
+
+  def fewest_tackles(season)
+    team_with_least_tackles = tackles_by_season(season).min_by { |team_tackles| team_tackles[1] }.first
+    team_name_by_team_id(team_with_least_tackles)
   end
 end

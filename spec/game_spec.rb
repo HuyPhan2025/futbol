@@ -16,8 +16,8 @@ RSpec.describe Game do
       venue_link: "link"
     }
   end
-  describe "#initialize" do
 
+  describe "#initialize" do
     it 'exists' do
       expect(game).to be_an_instance_of(Game)
     end

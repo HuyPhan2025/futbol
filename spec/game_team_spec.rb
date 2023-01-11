@@ -21,6 +21,7 @@ RSpec.describe GameTeam do
       takeaways: "7"
     }
   end
+  
   describe "#initialize" do
     it 'exists' do
       expect(game_team).to be_instance_of(GameTeam)
