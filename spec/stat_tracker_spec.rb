@@ -196,4 +196,6 @@ RSpec.describe StatTracker do
   it "#rival" do
     expect(stat_tracker.rival("6")).to eq("New York Red Bulls")
   end
+
+  
 end

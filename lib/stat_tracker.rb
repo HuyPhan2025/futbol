@@ -1,7 +1,4 @@
-require 'csv'
-require_relative 'game'
-require_relative 'team'
-require_relative 'game_team'
+require_relative 'stat_creator'
 require_relative 'gameable'
 require_relative 'leagueable'
 require_relative 'seasonable'
@@ -12,33 +9,9 @@ class StatTracker
   attr_reader :games, :teams, :game_teams
 
   def initialize(locations)
-    @games = create_games(locations[:games])
-    @teams = create_teams(locations[:teams])
-    @game_teams = create_game_teams(locations[:game_teams])
-  end
-
-  def create_games(game_path)
-    games = []
-    CSV.foreach(game_path, headers: true, header_converters: :symbol ) do |info|
-      games << Game.new(info)
-    end
-    games
-  end
-
-  def create_teams(team_path)
-    teams = []
-    CSV.foreach(team_path, headers: true, header_converters: :symbol ) do |info|
-      teams << Team.new(info)
-    end
-    teams
-  end
-
-  def create_game_teams(game_teams_path)
-    game_teams = []
-    CSV.foreach(game_teams_path, headers: true, header_converters: :symbol ) do |info|
-      game_teams << GameTeam.new(info)
-    end
-    game_teams
+    @games = StatCreator.create_games(locations[:games])
+    @teams = StatCreator.create_teams(locations[:teams])
+    @game_teams = StatCreator.create_game_teams(locations[:game_teams])
   end
 
   def self.from_csv(locations)
@@ -70,14 +43,9 @@ class StatTracker
   end
   
   def average_goals_by_season
-    hash = Hash.new{0}
-    
-    games_by_season.each do |season, games|
-      games.each { |game| hash[season] += total_game_goals(game) }      
-      hash[season] = (hash[season]/games.size.to_f).round(2)
+    games_by_season.transform_values do |games|
+      (games.sum { |game| total_game_goals(game) } / games.size.to_f).round(2)
     end
-
-    hash
   end        
      
   def count_of_teams
@@ -85,9 +53,7 @@ class StatTracker
   end
 
   def count_of_games_by_season
-    count_of_games_by_season = {}
-    games_by_season.each { |season, games| count_of_games_by_season[season] = games.size }
-    count_of_games_by_season
+    games_by_season.transform_values(&:size)
   end
     
   def highest_scoring_visitor
